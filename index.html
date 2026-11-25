@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1030">
+<title>Calendario de adviento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0a1030; --bg2:#1a0d38;
+  --red:#7650d0; --red2:#4a2c8c; --green:#2f64b8; --green2:#1e4285;
+  --gold:#e8dcff; --cream:#fff3dc; --ink:#3b2a22;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'Quicksand',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--sans);color:var(--cream);
+  background:radial-gradient(ellipse at top,var(--bg1),var(--bg2) 90%) fixed;
+  padding:0 0 60px;overflow-x:hidden;
+}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:0}
+header,main,footer{position:relative;z-index:1}
+header{text-align:center;padding:34px 20px 8px}
+header .para{font-family:var(--serif);font-style:italic;color:var(--gold);font-size:1.25rem;letter-spacing:.04em}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(2rem,7vw,3.4rem);margin:4px 0 6px;line-height:1.05}
+header p.sub{margin:0;opacity:.85}
+#estado{margin:18px auto 0;display:inline-block;padding:8px 18px;border:1px solid rgba(232,220,255,.5);border-radius:999px;color:var(--gold);font-size:.95rem;background:rgba(0,0,0,.2)}
+.garland{font-size:1.4rem;letter-spacing:.35em;margin-top:14px;opacity:.9}
+
+main{max-width:880px;margin:22px auto 0;padding:0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px}
+.door{
+  position:relative;aspect-ratio:1/1.08;border:none;border-radius:16px;cursor:pointer;color:var(--cream);
+  font-family:var(--serif);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:linear-gradient(145deg,var(--red),var(--red2));
+  box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 0 0 2px rgba(232,220,255,.55);
+  transition:transform .18s, box-shadow .18s, filter .18s;overflow:hidden;
+}
+.door:nth-child(even){background:linear-gradient(145deg,var(--green),var(--green2))}
+.door::before{content:"";position:absolute;left:0;right:0;top:46%;height:9px;background:rgba(232,220,255,.5)}
+.door::after{content:"";position:absolute;top:0;bottom:0;left:46%;width:9px;background:rgba(232,220,255,.5)}
+.door .num{position:relative;z-index:2;font-size:1.9rem;font-weight:700;line-height:1;background:rgba(0,0,0,.45);border-radius:12px;padding:4px 12px;color:var(--gold)}
+.door .tag{position:relative;z-index:2;font-family:var(--sans);font-size:.7rem;margin-top:6px;background:rgba(0,0,0,.45);border-radius:8px;padding:2px 8px}
+.door:hover:not(.locked){transform:translateY(-4px) rotate(-1deg)}
+.door.nuevo{animation:pulso 1.8s infinite}
+.door.abierto{filter:saturate(.7) brightness(.85)}
+.door.abierto::before,.door.abierto::after{opacity:.25}
+.door.abierto .num{background:transparent;font-size:2rem}
+.door.locked{filter:grayscale(.55) brightness(.6);cursor:not-allowed}
+.door.shake{animation:shake .4s}
+@keyframes pulso{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.4),0 0 0 0 rgba(232,220,255,.6),inset 0 0 0 2px rgba(232,220,255,.55)}50%{box-shadow:0 6px 16px rgba(0,0,0,.4),0 0 0 12px rgba(232,220,255,0),inset 0 0 0 2px rgba(232,220,255,.55)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.door.dia25{grid-column:span 2;aspect-ratio:auto;min-height:100px;background:linear-gradient(145deg,#9b7be0,#4a2c8c);}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#000c;border:1px solid var(--gold);color:var(--cream);padding:10px 18px;border-radius:999px;z-index:50;transition:.3s;font-size:.9rem;max-width:90%;text-align:center}
+#toast.on{transform:translate(-50%,0);opacity:1}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(5,10,7,.82);z-index:20;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px 50px;backdrop-filter:blur(3px)}
+#modal.on{display:flex}
+.card{position:relative;width:100%;max-width:560px;background:var(--cream);color:var(--ink);border-radius:18px;padding:30px 24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:aparece .35s ease;margin:auto 0;border:3px double #c9a23c}
+@keyframes aparece{from{opacity:0;transform:translateY(24px) scale(.97)}}
+.card .cerrar{position:absolute;top:10px;right:12px;border:none;background:none;font-size:1.6rem;cursor:pointer;color:var(--red2)}
+.card .dianum{font-family:var(--sans);text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;color:var(--red);text-align:center}
+.card h2{font-family:var(--serif);font-size:2rem;text-align:center;margin:4px 0 14px;color:var(--red2)}
+.card .icono{font-size:2.4rem;text-align:center}
+.card p{line-height:1.65;margin:0 0 12px;font-size:1.02rem}
+.carta p{font-family:var(--serif);font-size:1.25rem}
+.firma{text-align:right;font-family:var(--serif);font-style:italic;font-size:1.3rem;color:var(--red2);margin-top:14px}
+.poema{font-family:var(--serif);font-style:italic;font-size:1.35rem;line-height:1.7;text-align:center;white-space:pre-line;margin:16px 0 10px}
+.autor{text-align:center;color:var(--red);font-size:.9rem}
+.btn{display:inline-block;font:inherit;font-weight:600;border:none;border-radius:999px;padding:10px 20px;cursor:pointer;background:var(--red);color:#fff;margin:4px}
+.btn.sec{background:var(--green)}
+.centro{text-align:center}
+audio{width:100%;margin:10px 0}
+iframe{width:100%;border:0;border-radius:12px;margin:8px 0}
+.polaroids{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:12px 0}
+.polaroid{background:#fff;padding:10px 10px 6px;box-shadow:0 6px 14px rgba(0,0,0,.25);width:min(100%,250px);transform:rotate(-2deg)}
+.polaroid:nth-child(even){transform:rotate(2deg)}
+.polaroid img{width:100%;display:block;aspect-ratio:1;object-fit:cover;background:#eadfca}
+.polaroid figcaption{font-family:var(--serif);font-style:italic;text-align:center;padding:8px 2px 2px;font-size:1.05rem}
+.faltante{background:#f1e6cf;border:2px dashed #c9a23c;border-radius:12px;padding:14px;text-align:center;font-size:.92rem;margin:8px 0}
+.serie{border:2px solid #c9a23c;border-radius:14px;padding:18px;background:#fff9ea;text-align:center}
+.serie .nombre{font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--green2)}
+.serie blockquote{font-family:var(--serif);font-style:italic;font-size:1.25rem;margin:12px 0 0;color:var(--red2)}
+.vale{border:2px dashed var(--red);border-radius:12px;padding:14px 16px;margin:10px 0;background:#fff;display:flex;gap:12px;align-items:center;cursor:pointer;transition:.2s}
+.vale .chk{font-size:1.5rem}
+.vale.canjeado{opacity:.5;text-decoration:line-through}
+
+/* juegos */
+.tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.carta-m{aspect-ratio:1;border:none;border-radius:12px;font-size:2rem;cursor:pointer;background:linear-gradient(145deg,var(--green),var(--green2));color:#fff;display:flex;align-items:center;justify-content:center;perspective:600px;overflow:hidden}
+.carta-m img{width:100%;height:100%;object-fit:cover}
+.carta-m.vol{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 3px var(--gold)}
+.carta-m.ok{background:#fff;box-shadow:inset 0 0 0 3px #3a9b5f}
+.opcion{display:block;width:100%;text-align:left;font:inherit;border:2px solid #d8c8a5;background:#fff;border-radius:12px;padding:11px 14px;margin:8px 0;cursor:pointer}
+.opcion.bien{border-color:#3a9b5f;background:#e3f6e9}
+.opcion.mal{border-color:#c0392b;background:#fbe3df}
+#campo{position:relative;height:320px;background:linear-gradient(#17255a,#0a1030);border-radius:14px;overflow:hidden;touch-action:manipulation;margin:10px 0;border:2px solid #c9a23c}
+.caer{position:absolute;top:-40px;font-size:2rem;user-select:none;cursor:pointer;animation:cae linear forwards}
+@keyframes cae{to{transform:translateY(380px) rotate(40deg)}}
+.hud{display:flex;justify-content:space-between;font-weight:600;color:var(--red2)}
+.letras{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.letra{width:46px;height:52px;border-radius:10px;border:2px solid #c9a23c;background:#fff;font-family:var(--serif);font-size:1.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.letra.vacia{background:#f1e6cf}
+.letra.usada{opacity:.25;pointer-events:none}
+.notas{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.notas button{padding:12px 4px;border-radius:10px;border:2px solid #c9a23c;background:#fff;font:inherit;font-weight:600;cursor:pointer}
+.carta-m.txt{font-family:var(--serif);font-weight:700;font-size:.82rem;line-height:1.1;padding:4px;text-align:center}
+.carta-m.txt.vol,.carta-m.txt.ok{color:var(--red2)}
+.parejas{display:grid;gap:10px;margin:12px 0}
+.pareja{border:2px solid #c9a23c;border-radius:14px;background:#fff9ea;padding:10px 14px;text-align:center}
+.pareja .n{font-family:var(--serif);font-weight:700;font-size:1.25rem;color:var(--red2)}
+.pareja .s{font-size:.8rem;color:var(--green2);text-transform:uppercase;letter-spacing:.08em}
+.pareja .t{font-size:.92rem;margin-top:4px;color:var(--ink)}
+.premio{margin-top:16px;padding:14px;border-radius:12px;background:#fff6d8;border:2px solid #c9a23c;text-align:center;font-family:var(--serif);font-size:1.25rem;color:var(--red2)}
+.final{text-align:center}
+.final img{max-width:100%;border-radius:12px;margin:10px 0;border:6px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+footer{text-align:center;opacity:.6;font-size:.8rem;margin-top:30px}
+#confeti{position:fixed;inset:0;pointer-events:none;z-index:40}
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<canvas id="confeti"></canvas>
+
+<header>
+  <div class="para" id="para"></div>
+  <h1 id="titulo"></h1>
+  <p class="sub" id="sub"></p>
+  <div class="garland">❄️ ⭐ 🌙 ⭐ ❄️</div>
+  <div id="estado"></div>
+</header>
+<main><div class="grid" id="grid"></div></main>
+<footer id="pie"></footer>
+
+<div id="modal" role="dialog" aria-modal="true"><div class="card" id="card"></div></div>
+<div id="toast"></div>
+
+<script src="content.js"></script>
+<script>
+(() => {
+const C = window.CONFIG;
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null) e.setAttribute(k, v);
+  }
+  kids.flat().forEach(c => { if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+};
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+/* ---------- fecha ---------- */
+const qs = new URLSearchParams(location.search);
+function hoy() {
+  if (qs.has('hoy')) { const [y, m, d] = qs.get('hoy').split('-').map(Number); return new Date(y, m - 1, d); }
+  return new Date();
+}
+function disponible() {
+  if (qs.has('todo')) return 99;
+  const t = hoy(), y = t.getFullYear();
+  if (y > C.anio) return 99;
+  if (y < C.anio || t.getMonth() < 11) return 0;
+  return t.getDate();
+}
+let abiertos = new Set(store.get('adv_abiertos', []));
+const guardar = () => store.set('adv_abiertos', [...abiertos]);
+
+/* ---------- cabecera ---------- */
+$('#para').textContent = 'Para ' + C.para;
+$('#titulo').textContent = C.titulo;
+$('#sub').textContent = C.subtitulo;
+$('#pie').textContent = 'Hecho con amor por ' + C.de + ' · ' + C.anio;
+document.title = C.titulo;
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+/* ---------- rejilla ---------- */
+function pintar() {
+  const disp = disponible(), g = $('#grid'); g.innerHTML = '';
+  const est = $('#estado');
+  if (disp === 0) {
+    const ini = new Date(C.anio, 11, 1), dif = Math.ceil((ini - hoy()) / 864e5);
+    est.textContent = dif > 0 ? `Faltan ${dif} día${dif === 1 ? '' : 's'} para empezar 🎁` : C.antes;
+  } else if (disp >= 25) est.textContent = 'Ya puedes abrir todas las casillas 💛';
+  else est.textContent = `Hoy te toca la casilla ${disp} ✨`;
+
+  C.dias.forEach(d => {
+    const bloq = d.n > disp, ab = abiertos.has(d.n);
+    const cls = ['door'];
+    if (bloq) cls.push('locked'); else if (ab) cls.push('abierto'); else cls.push('nuevo');
+    if (d.n === 25) cls.push('dia25');
+    const b = h('button', { class: cls.join(' '), 'aria-label': 'Día ' + d.n, onclick: () => {
+      if (bloq) {
+        b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+        const f = d.n - disp;
+        toast(disp === 0 ? 'Todavía no empieza, ten paciencia 😉' : `Esa se abre en ${f} día${f === 1 ? '' : 's'}. ¡Sin trampa! 😉`);
+        return;
+      }
+      abrir(d);
+    }},
+      h('span', { class: 'num' }, bloq ? '🔒' : String(d.n)),
+      h('span', { class: 'tag' }, bloq ? `Día ${d.n}` : (ab ? d.icono + ' ' + d.titulo.slice(0, 14) : d.icono))
+    );
+    g.append(b);
+  });
+}
+
+/* ---------- modal ---------- */
+function cerrar() {
+  $('#modal').classList.remove('on'); $('#card').innerHTML = '';
+  document.querySelectorAll('audio').forEach(a => a.pause());
+  document.body.style.overflow = '';
+  stopJuegos();
+}
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') cerrar(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); });
+
+function abrir(d) {
+  abiertos.add(d.n); guardar();
+  const card = $('#card'); card.innerHTML = '';
+  card.append(
+    h('button', { class: 'cerrar', 'aria-label': 'Cerrar', onclick: cerrar }, '×'),
+    h('div', { class: 'icono' }, d.icono),
+    h('div', { class: 'dianum' }, 'Día ' + d.n),
+    h('h2', {}, d.titulo),
+    render(d)
+  );
+  $('#modal').classList.add('on'); $('#modal').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  pintar();
+}
+const parrafos = t => (Array.isArray(t) ? t : [t]).filter(Boolean).map(x => h('p', {}, x));
+function mediaFalta(msg) { return h('div', { class: 'faltante' }, msg); }
+
+const tipos = {
+  carta: d => h('div', { class: 'carta' }, parrafos(d.texto), d.firma && h('div', { class: 'firma' }, d.firma)),
+  poema: d => h('div', {}, h('div', { class: 'poema' }, d.versos), d.autor && h('div', { class: 'autor' }, d.autor)),
+  foto: d => {
+    const w = h('div', { class: 'polaroids' });
+    d.fotos.forEach(f => {
+      const img = h('img', { src: f.src, alt: f.pie || '', loading: 'lazy' });
+      const fig = h('figure', { class: 'polaroid', style: 'margin:0' }, img, f.pie ? h('figcaption', {}, f.pie) : null);
+      img.addEventListener('error', () => { img.replaceWith(mediaFalta('📸 Esta foto está por llegar')); });
+      w.append(fig);
+    });
+    return h('div', {}, w, parrafos(d.texto));
+  },
+  audio: d => {
+    const a = h('audio', { controls: '', preload: 'metadata', src: d.src });
+    const box = h('div', {}, parrafos(d.texto), a);
+    a.addEventListener('error', () => { a.replaceWith(mediaFalta('🎧 Este audio se está grabando, vuelve pronto')); });
+    return box;
+  },
+  cancion: d => {
+    const lista = d.lista || [d];
+    const cont = h('div', {});
+    if (d.texto) cont.append(...parrafos(d.texto));
+    lista.forEach(c => {
+      const box = h('div', { class: 'centro', style: 'margin-bottom:22px' }, h('div', { class: 'serie' },
+        h('div', { class: 'nombre' }, c.cancion), h('div', {}, c.artista)));
+      if (c.spotify) box.append(h('iframe', { src: 'https://open.spotify.com/embed/track/' + encodeURIComponent(c.spotify), height: '152', allow: 'encrypted-media', loading: 'lazy' }));
+      else if (c.youtube) box.append(h('iframe', { src: 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(c.youtube), height: '220', allow: 'encrypted-media; picture-in-picture', allowfullscreen: '' }));
+      else if (c.src) { const a = h('audio', { controls: '', src: c.src }); a.addEventListener('error', () => a.replaceWith(mediaFalta('🎶 La canción llega pronto'))); box.append(a); }
+      else box.append(h('p', {}, h('a', { class: 'btn sec', target: '_blank', rel: 'noopener', style: 'text-decoration:none', href: 'https://open.spotify.com/search/' + encodeURIComponent(c.cancion + ' ' + c.artista) }, '▶ Escuchar en Spotify')));
+      if (c.porque) box.append(h('p', { style: 'margin-top:12px' }, c.porque));
+      cont.append(box);
+    });
+    return cont;
+  },
+  playlist: d => {
+    const w = h('div', {}, parrafos(d.texto));
+    (d.playlists || [d.playlist]).forEach(id => w.append(h('iframe', { src: 'https://open.spotify.com/embed/playlist/' + encodeURIComponent(id) + '?utm_source=generator', height: '380', allow: 'encrypted-media', loading: 'lazy' })));
+    return w;
+  },
+  video: d => {
+    const v = h('video', { controls: '', playsinline: '', preload: 'metadata', src: d.src, style: 'width:100%;max-height:70vh;border-radius:12px;background:#000;margin:8px 0' });
+    const box = h('div', { class: 'centro' }, parrafos(d.texto), v);
+    v.addEventListener('error', () => v.replaceWith(mediaFalta('🎬 Este video llega pronto')));
+    return box;
+  },
+  cartaimg: d => {
+    const im = h('img', { src: d.imagen, alt: 'Carta', style: 'width:100%;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.25);display:block' });
+    im.addEventListener('error', () => im.replaceWith(mediaFalta('💌 Esta carta llega pronto')));
+    const fig = d.figura ? h('img', { src: d.figura, alt: '', style: 'display:block;margin:0 auto 12px;max-width:230px;width:70%;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.25)', onerror: function () { this.remove(); } }) : null;
+    return h('div', { class: 'centro' }, fig, parrafos(d.intro), h('a', { href: d.imagen, target: '_blank', rel: 'noopener' }, im), h('p', { style: 'font-size:.85rem;opacity:.7;margin-top:8px' }, 'Toca la carta para verla en grande'), parrafos(d.texto));
+  },
+  serie: d => h('div', {}, h('div', { class: 'serie' }, h('div', { class: 'nombre' }, d.serie), d.frase && h('blockquote', {}, '“' + d.frase + '”')), h('p', { style: 'margin-top:14px' }, d.porque)),
+  parejas: d => {
+    const w = h('div', {}, parrafos(d.texto)), g = h('div', { class: 'parejas' });
+    d.parejas.forEach(p => g.append(h('div', { class: 'pareja' },
+      h('div', { class: 'n' }, p.a + ' 💗 ' + p.b), h('div', { class: 's' }, p.serie), p.nota && h('div', { class: 't' }, p.nota))));
+    w.append(g); return w;
+  },
+  vale: d => {
+    const k = 'adv_vale_' + d.n, hechos = new Set(store.get(k, []));
+    const w = h('div', {}, parrafos(d.texto));
+    d.vales.forEach((v, i) => {
+      const el = h('div', { class: 'vale' + (hechos.has(i) ? ' canjeado' : ''), onclick: () => {
+        hechos.has(i) ? hechos.delete(i) : hechos.add(i); store.set(k, [...hechos]);
+        el.classList.toggle('canjeado'); chk.textContent = hechos.has(i) ? '✅' : '🎟️';
+        if (hechos.has(i)) toast('¡Vale canjeado! Avísame 😘');
+      }}, h('span', { class: 'chk' }, hechos.has(i) ? '✅' : '🎟️'), h('span', {}, v));
+      const chk = el.firstChild; w.append(el);
+    });
+    return w;
+  },
+  juego: d => juegos[d.juego] ? juegos[d.juego](d) : mediaFalta('Juego no encontrado'),
+  final: d => {
+    setTimeout(confeti, 400);
+    const w = h('div', { class: 'final carta' });
+    if (d.foto) { const im = h('img', { src: d.foto, alt: '' }); im.addEventListener('error', () => im.remove()); w.append(im); }
+    w.append(...parrafos(d.texto));
+    if (d.playlists) { w.append(h('p', {}, d.playlistsTexto || ''), tipos.playlist({ playlists: d.playlists })); }
+    w.append(...parrafos(d.textoFinal), d.firma && h('div', { class: 'firma' }, d.firma));
+    w.append(h('button', { class: 'btn', onclick: confeti }, '🎉 Más confeti'));
+    return w;
+  }
+};
+const render = d => (tipos[d.tipo] || (() => h('p', {}, 'Pronto…')))(d);
+const premioEl = t => h('div', { class: 'premio' }, t);
+
+/* ---------- juegos ---------- */
+let timers = [];
+function stopJuegos() { timers.forEach(clearInterval); timers.forEach(clearTimeout); timers = []; }
+const mezclar = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+const juegos = {
+  memoria(d) {
+    const w = h('div', { class: 'centro' }, h('p', {}, 'Encuentra todas las parejas.'));
+    const tab = h('div', { class: 'tablero' }), mens = h('div', {});
+    let abierta = null, bloqueo = false, hechas = 0;
+    const esImg = s => /\.(jpe?g|png|webp|gif)$/i.test(s);
+    mezclar([...d.pares, ...d.pares]).forEach(v => {
+      const b = h('button', { class: 'carta-m', 'aria-label': 'carta' }, '❄️');
+      b.addEventListener('click', () => {
+        if (bloqueo || b.classList.contains('vol') || b.classList.contains('ok')) return;
+        b.classList.add('vol'); b.textContent = ''; b.append(esImg(v) ? h('img', { src: v, alt: '' }) : v);
+        if (!abierta) { abierta = { b, v }; return; }
+        if (abierta.v === v) {
+          b.classList.add('ok'); abierta.b.classList.add('ok'); abierta = null;
+          if (++hechas === d.pares.length) { mens.append(premioEl(d.premio)); confeti(); }
+        } else {
+          bloqueo = true; const a = abierta; abierta = null;
+          timers.push(setTimeout(() => { [a.b, b].forEach(x => { x.classList.remove('vol'); x.textContent = '❄️'; }); bloqueo = false; }, 800));
+        }
+      });
+      tab.append(b);
+    });
+    w.append(tab, mens); return w;
+  },
+
+  parejas(d) {
+    const w = h('div', { class: 'centro' }, h('p', {}, d.texto || 'Une a cada personaje con su pareja.'));
+    const tab = h('div', { class: 'tablero' }), mens = h('div', {});
+    w.append(tab, mens);
+    function jugar() {
+      tab.innerHTML = ''; mens.innerHTML = '';
+      let abierta = null, bloqueo = false, hechas = 0;
+      const elegidas = mezclar(d.parejas).slice(0, d.rondas || 6);
+      const cartas = mezclar(elegidas.flatMap((p, i) => [{ id: i, t: p.a }, { id: i, t: p.b }]));
+      cartas.forEach(c => {
+        const b = h('button', { class: 'carta-m', 'aria-label': 'carta' }, '❄️');
+        b.addEventListener('click', () => {
+          if (bloqueo || b.classList.contains('vol') || b.classList.contains('ok')) return;
+          b.classList.add('vol', 'txt'); b.textContent = c.t;
+          if (!abierta) { abierta = { b, c }; return; }
+          if (abierta.c.id === c.id) {
+            b.classList.add('ok'); abierta.b.classList.add('ok'); abierta = null;
+            if (++hechas === elegidas.length) { mens.append(premioEl(d.premio), h('button', { class: 'btn', onclick: jugar }, '↻ Jugar otra vez')); confeti(); }
+          } else {
+            bloqueo = true; const a = abierta; abierta = null;
+            timers.push(setTimeout(() => { [a.b, b].forEach(x => { x.classList.remove('vol', 'txt'); x.textContent = '❄️'; }); bloqueo = false; }, 900));
+          }
+        });
+        tab.append(b);
+      });
+    }
+    jugar(); return w;
+  },
+
+  quiz(d) {
+    const w = h('div', {}), cont = h('div'); let i = 0, pts = 0; w.append(cont);
+    const paso = () => {
+      cont.innerHTML = '';
+      if (i >= d.preguntas.length) {
+        cont.append(h('p', { class: 'centro', style: 'font-size:1.3rem' }, `Acertaste ${pts} de ${d.preguntas.length} 💛`), premioEl(d.premio));
+        if (pts === d.preguntas.length) confeti(); return;
+      }
+      const q = d.preguntas[i];
+      cont.append(h('p', {}, h('b', {}, `${i + 1}/${d.preguntas.length} · ${q.p}`)));
+      q.o.forEach((t, k) => {
+        const b = h('button', { class: 'opcion', onclick: () => {
+          cont.querySelectorAll('.opcion').forEach((x, j) => { x.disabled = true; if (j === q.ok) x.classList.add('bien'); });
+          if (k === q.ok) pts++; else b.classList.add('mal');
+          timers.push(setTimeout(() => { i++; paso(); }, 1100));
+        }}, t);
+        cont.append(b);
+      });
+    };
+    paso(); return w;
+  },
+
+  copos(d) {
+    const w = h('div', {}), campo = h('div', { id: 'campo' }), hud = h('div', { class: 'hud' });
+    const sc = h('span', {}, `💗 0 / ${d.meta}`), tm = h('span', {}, `⏱ ${d.segundos}s`);
+    hud.append(sc, tm);
+    const ini = h('div', { class: 'centro' }, h('button', { class: 'btn', onclick: jugar }, '▶ Empezar'));
+    w.append(h('p', { class: 'centro' }, `Toca ${d.meta} corazones antes de que se acabe el tiempo.`), hud, campo, ini);
+    function jugar() {
+      stopJuegos(); campo.innerHTML = ''; ini.innerHTML = ''; let n = 0, t = d.segundos;
+      sc.textContent = `💗 0 / ${d.meta}`; tm.textContent = `⏱ ${t}s`;
+      const items = ['💗', '❄️', '⭐', '💗', '💖'];
+      timers.push(setInterval(() => {
+        const e = h('span', { class: 'caer' }, items[Math.random() * items.length | 0]);
+        e.style.left = Math.random() * 85 + '%'; e.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+        e.addEventListener('pointerdown', () => {
+          if (e.textContent.includes('💗') || e.textContent.includes('💖')) { n++; sc.textContent = `💗 ${n} / ${d.meta}`; }
+          e.remove();
+          if (n >= d.meta) fin(true);
+        });
+        e.addEventListener('animationend', () => e.remove());
+        campo.append(e);
+      }, 520));
+      timers.push(setInterval(() => { t--; tm.textContent = `⏱ ${t}s`; if (t <= 0) fin(n >= d.meta); }, 1000));
+      function fin(ok) {
+        stopJuegos(); campo.innerHTML = '';
+        if (ok) { ini.append(premioEl(d.premio)); confeti(); }
+        else ini.append(h('p', {}, `Hiciste ${n}. ¡Casi! Inténtalo otra vez.`), h('button', { class: 'btn', onclick: jugar }, '↻ Reintentar'));
+      }
+    }
+    return w;
+  },
+
+  scramble(d) {
+    const w = h('div', { class: 'centro' }), cont = h('div'); w.append(cont); let i = 0;
+    const paso = () => {
+      cont.innerHTML = '';
+      if (i >= d.palabras.length) { cont.append(premioEl(d.premio)); confeti(); return; }
+      const { pista, palabra } = d.palabras[i];
+      let rev = mezclar(palabra.split('')); if (rev.join('') === palabra && palabra.length > 1) rev.reverse();
+      const meta = h('div', { class: 'letras' }), pool = h('div', { class: 'letras' });
+      let pos = 0;
+      palabra.split('').forEach(() => meta.append(h('div', { class: 'letra vacia' })));
+      rev.forEach(l => {
+        const b = h('div', { class: 'letra', onclick: () => {
+          if (pos >= palabra.length) return;
+          meta.children[pos].textContent = l; meta.children[pos].classList.remove('vacia'); b.classList.add('usada'); pos++;
+          if (pos === palabra.length) {
+            const txt = [...meta.children].map(x => x.textContent).join('');
+            if (txt === palabra) { toast('¡Correcto! 💛'); timers.push(setTimeout(() => { i++; paso(); }, 900)); }
+            else { toast('Mmm, no es esa. Reinicio…'); timers.push(setTimeout(paso, 900)); }
+          }
+        }}, l);
+        pool.append(b);
+      });
+      cont.append(h('p', {}, h('b', {}, `${i + 1}/${d.palabras.length} · `), pista), meta, pool);
+    };
+    paso(); return w;
+  },
+
+  clave(d) {
+    // posición: 0 = línea inferior (Mi4); sube de a media línea
+    const NOM = ['Mi', 'Fa', 'Sol', 'La', 'Si', 'Do', 'Re', 'Mi', 'Fa'];
+    const pos = [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8];  // Do4 … Fa5
+    const nombre = p => ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'][((p % 7) + 7 + 2) % 7];
+    const w = h('div', { class: 'centro' }), cont = h('div'); w.append(cont);
+    let r = 0, aciertos = 0;
+    const paso = () => {
+      cont.innerHTML = '';
+      if (r >= d.rondas) { cont.append(h('p', {}, `Acertaste ${aciertos} de ${d.rondas} 🎼`), premioEl(d.premio)); if (aciertos >= d.rondas - 1) confeti(); return; }
+      const p = pos[Math.random() * pos.length | 0], y0 = 120, dy = 10;   // y de línea inferior
+      const y = y0 - p * dy / 1;
+      let svg = `<svg viewBox="0 0 300 190" width="100%" style="background:#fff;border-radius:12px;border:2px solid #c9a23c"><g stroke="#3b2a22" stroke-width="1.5">`;
+      for (let l = 0; l < 5; l++) svg += `<line x1="20" x2="280" y1="${y0 - l * 20}" y2="${y0 - l * 20}"/>`;
+      svg += `</g><text x="26" y="${y0 + 2}" font-size="96" font-family="'Noto Music','Segoe UI Symbol','Apple Symbols',serif" fill="#3b2a22">𝄞</text>`;
+      // líneas adicionales
+      if (p <= -2) svg += `<line x1="140" x2="180" y1="${y0 + 20}" y2="${y0 + 20}" stroke="#3b2a22" stroke-width="1.5"/>`;
+      if (p >= 12) svg += '';
+      svg += `<ellipse cx="160" cy="${y}" rx="11" ry="8" fill="#3b2a22" transform="rotate(-20 160 ${y})"/></svg>`;
+      const caja = h('div'); caja.innerHTML = svg;
+      cont.append(h('p', {}, h('b', {}, `Ronda ${r + 1}/${d.rondas} · ¿Qué nota es?`)), caja);
+      const bs = h('div', { class: 'notas' });
+      ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'].forEach(n => {
+        bs.append(h('button', { onclick: () => {
+          const ok = n === nombre(p);
+          if (ok) aciertos++; toast(ok ? '¡Correcto! 🎶' : 'Era ' + nombre(p));
+          bs.querySelectorAll('button').forEach(b => b.disabled = true);
+          timers.push(setTimeout(() => { r++; paso(); }, 1000));
+        }}, n));
+      });
+      cont.append(bs);
+    };
+    paso(); return w;
+  }
+};
+
+/* ---------- confeti ---------- */
+function confeti() {
+  const c = $('#confeti'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const cols = ['#e8dcff', '#7650d0', '#2f64b8', '#fff3dc', '#a9c4ff'];
+  const ps = Array.from({ length: 140 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .5, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, s: 5 + Math.random() * 6, r: Math.random() * 6, c: cols[Math.random() * cols.length | 0] }));
+  let f = 0;
+  (function loop() {
+    x.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .1; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .6); x.restore(); });
+    if (++f < 260) requestAnimationFrame(loop); else x.clearRect(0, 0, c.width, c.height);
+  })();
+}
+
+/* ---------- nieve de fondo ---------- */
+(function nieve() {
+  const c = $('#snow'), x = c.getContext('2d'); let W, H, fl = [];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size() { W = c.width = innerWidth; H = c.height = innerHeight; fl = Array.from({ length: Math.min(90, W / 8 | 0) }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 1 + Math.random() * 2.6, v: .3 + Math.random() * .9, a: Math.random() * 6 })); }
+  size(); addEventListener('resize', size);
+  if (reduce) return;
+  (function loop() {
+    x.clearRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.8)';
+    fl.forEach(f => { f.y += f.v; f.a += .01; f.x += Math.sin(f.a) * .4; if (f.y > H) { f.y = -5; f.x = Math.random() * W; } x.beginPath(); x.arc(f.x, f.y, f.r, 0, 7); x.fill(); });
+    requestAnimationFrame(loop);
+  })();
+})();
+
+pintar();
+})();
+</script>
+</body>
+</html>
